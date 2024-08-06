@@ -25,6 +25,6 @@ jobs:
       - name: Merge Upstream Changes
         run: |
           git checkout main # 如果使用不同分支名称，请更改此处
-          git merge upstream/main --no-edit
+          git merge upstream/main --allow-unrelated-histories --no-edit
           git push origin main
 
