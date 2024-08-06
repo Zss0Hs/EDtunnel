@@ -1,40 +1,30 @@
-name: "🔄 Sync all branches with main"
+name: Sync with Upstream
 
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' # 每天 UTC 时间午夜同步
+  workflow_dispatch: # 允许手动触发
 
 jobs:
-  sync_branches:
+  sync:
     runs-on: ubuntu-latest
-    name: "🔄 Sync branches with main"
-    env:
-      EMAIL: ${{ secrets.GH_EMAIL }}
-      NAME: ${{ secrets.GH_USERNAME }}
-      TOKEN: ${{ secrets.TOKEN }}
-      REMOTE_NAME: origin
-      BRANCH_BASE_NAME: proxyip
-      BRANCH_COUNT: 200
 
     steps:
-      - name: 🛠 Set up Git config
-        run: |
-          git config --global user.email "${{ env.EMAIL }}"
-          git config --global user.name "${{ env.NAME }}"
+      - name: Checkout Fork Repository
+        uses: actions/checkout@v3
+        with:
+          repository: your-username/your-repo # 替换为你的仓库信息
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - name: 📥 Clone repository
+      - name: Add Upstream Repository
         run: |
-          git clone https:///${{ env.TOKEN }}@github.com/${{github.repository}}.git
-          cd $(echo ${{github.repository}} | awk -F'/' '{print $2}')
+          git remote add upstream https://github.com/3Kmfi6HP/EDtunnel.git # 替换为上游仓库URL
+          git fetch upstream
 
-      - name: 🔄 Sync and push branches
+      - name: Merge Upstream Changes
         run: |
-          cd $(echo ${{github.repository}} | awk -F'/' '{print $2}')
-          git checkout main
-          git pull ${REMOTE_NAME} main
-          for ((i=1; i<=${{ env.BRANCH_COUNT }}; i++)); do
-            branch_name="${{ env.BRANCH_BASE_NAME }}${i}"
-            git checkout $branch_name
-            git merge main --no-edit
-            git push ${REMOTE_NAME} $branch_name
-            git checkout main
-          done
+          git checkout main # 如果使用不同分支名称，请更改此处
+          git merge upstream/main --no-edit
+          git push origin main
+
