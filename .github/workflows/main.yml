@@ -1,0 +1,26 @@
+name: Deploy Worker
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: 
+      name: default
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Wrangler
+        run: npm install -g wrangler
+      - name: Generate Compatibility Date
+        id: generate-date
+        run: echo ::set-output name=date::$(date +'%Y-%m-%d')
+      - name: Deploy Worker to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy worker.js --name text-to-speech --compatibility-date ${{ steps.generate-date.outputs.date }} --var ENV_REGION:eastus 
